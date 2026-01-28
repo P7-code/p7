@@ -157,6 +157,61 @@ streamlit run app.py
 - GitHub 仓库: https://github.com/P7-code/p7
 - 部署文档: [DEPLOYMENT.md](./DEPLOYMENT.md)
 
+## 代码修复历史
+
+### 2025-01-XX: Streamlit Cloud 部署修复
+**问题描述**:
+- Streamlit Cloud 部署时报错 "Error installing requirements"
+- 运行时报错 `ModuleNotFoundError: ... from coze_coding_utils.runtime_ctx.context import Context`
+- 运行时报错 `name 'json' is not defined`
+
+**解决方案**:
+1. 移除 `requirements.txt` 中的私有依赖（`coze-coding-dev-sdk`, `coze-coding-ai` 等）
+2. 在 `src/graphs/node.py` 中使用 try-except 条件导入 `Context`
+3. 在 `src/utils/file/file.py` 中添加 `json` 模块导入
+
+**影响范围**:
+- `requirements.txt`: 精简依赖，仅保留公开可用的包
+- `src/graphs/node.py`: 兼容 Streamlit Cloud 环境
+- `src/utils/file/file.py`: 修复模块导入问题
+
+### 2025-01-XX: 文档结构提取与章节标注
+**功能增强**:
+- 新增文档结构提取功能（Word章节、PDF页码）
+- 所有检查节点支持在结果中标注问题所在章节
+- 增加DOCX格式报告生成功能
+
+**文件修改**:
+1. `src/utils/file/file.py`:
+   - 新增 `extract_text_with_structure` 方法
+   - 新增 `_parse_docx_with_structure` 私有方法
+   - 新增 `_parse_pdf_with_structure` 私有方法
+2. `src/graphs/state.py`:
+   - `GlobalState` 增加 `tender_doc_structure` 和 `bid_doc_structure` 字段
+   - 所有检查节点输入类增加 `bid_doc_structure` 字段
+3. `src/graphs/node.py`:
+   - 修改 `tender_doc_parse` 和 `bid_doc_parse` 使用新方法
+   - 修改所有检查节点传递结构参数
+4. `config/*.json`:
+   - 修改6个检查节点配置，要求LLM标注章节信息
+5. `app.py`:
+   - 新增 `generate_docx_report` 函数
+   - 新增 `add_content_to_docx` 函数
+   - 新增下载DOCX报告按钮
+
+**用户需执行的步骤**:
+```bash
+# 1. 拉取最新代码
+git pull
+
+# 2. 推送到 GitHub
+git push
+
+# 3. 在 Streamlit Cloud Settings 中配置环境变量
+# - OPENAI_API_KEY: your-api-key
+# - OPENAI_API_BASE: https://api.deepseek.com
+```
+
 ## 常见问题
 
 ### Q1: 如何修改 LLM 配置？

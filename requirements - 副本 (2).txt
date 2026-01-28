@@ -1,34 +1,51 @@
-# ==========================================
-# 招标文件智能分析系统 - 精简依赖列表
-# ==========================================
-# 适用于 Streamlit Cloud 部署
-# 只包含必需的公共包
-
-# Web应用
-streamlit>=1.28.0
-
+# ============================================
 # 核心框架
-langgraph>=1.0.0
-langchain>=1.0.0
-langchain-core>=1.0.0
-langchain-openai>=0.1.0
+# ============================================
+streamlit==1.53.1
+langchain==1.0.3
+langchain-core==1.0.2
+langchain-openai==1.0.1
+langgraph==1.0.2
 
-# 数据处理
-pydantic>=2.0.0
-
+# ============================================
 # 文档处理
-pypdf>=6.0.0
-docx2python>=3.0.0
-python-docx>=1.0.0
-python-pptx>=1.0.0
-openpyxl>=3.0.0
-pandas>=2.0.0
+# ============================================
+pypdf==6.4.1
+docx2python==3.5.0
+python-docx==1.2.0
+python-pptx==1.0.2
+openpyxl==3.1.5
 
-# 工具库
-python-dotenv>=1.0.0
-httpx>=0.25.0
-tiktoken>=0.5.0
-jinja2>=3.0.0
-pyyaml>=6.0.0
-requests>=2.30.0
-chardet>=5.0.0
+# ============================================
+# LLM调用
+# ============================================
+openai==2.15.0
+tiktoken==0.12.0
+
+# ============================================
+# 核心依赖
+# ============================================
+pydantic==2.12.3
+jinja2==3.1.6
+requests==2.32.5
+chardet==5.2.0
+python-dotenv==1.2.1
+tenacity==9.1.2
+
+# ============================================
+# 可选：数据处理（如果需要Excel解析）
+# ============================================
+# pandas==2.2.2
+
+# ============================================
+# 移除的包（不需要安装）
+# ============================================
+# 测试工具：pytest, pytest-*, coverage, pluggy
+# 代码质量工具：pylint, isort, black, mccabe
+# 私有包：coze-coding-*, cozeloop（Streamlit Cloud不支持）
+# 开发服务器：fastapi, uvicorn
+# 数据库：SQLAlchemy, psycopg, alembic（当前未使用）
+# 可视化工具：altair, pydeck（streamlit已自带）
+# 图像处理：opencv-python（当前未使用）
+# Git工具：GitPython（当前未使用）
+# 类型检查包：types-*（开发时使用）
