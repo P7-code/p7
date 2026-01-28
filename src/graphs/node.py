@@ -23,6 +23,7 @@ from graphs.state import (
     ModificationSummaryInput, ModificationSummaryOutput
 )
 
+
 # ============================================
 # 文件解析节点
 # ============================================
@@ -34,7 +35,13 @@ def tender_doc_parse_node(state: TenderDocParseInput, config: RunnableConfig, ru
     integrations:
     """
     try:
-        content = FileOps.extract_text(state.tender_file)
+        # 处理输入可能是字典的情况
+        tender_file = state.tender_file
+        if isinstance(tender_file, dict):
+            from utils.file.file import File
+            tender_file = File(**tender_file)
+        
+        content = FileOps.extract_text(tender_file)
         return TenderDocParseOutput(tender_doc_content=content)
     except Exception as e:
         return TenderDocParseOutput(tender_doc_content=f"解析失败: {str(e)}")
@@ -47,7 +54,13 @@ def bid_doc_parse_node(state: BidDocParseInput, config: RunnableConfig, runtime:
     integrations:
     """
     try:
-        content = FileOps.extract_text(state.bid_file)
+        # 处理输入可能是字典的情况
+        bid_file = state.bid_file
+        if isinstance(bid_file, dict):
+            from utils.file.file import File
+            bid_file = File(**bid_file)
+        
+        content = FileOps.extract_text(bid_file)
         return BidDocParseOutput(bid_doc_content=content)
     except Exception as e:
         return BidDocParseOutput(bid_doc_content=f"解析失败: {str(e)}")
