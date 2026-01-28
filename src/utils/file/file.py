@@ -214,6 +214,111 @@ class FileOps:
             return f"[FileOps Error] Failed to read content: {str(e)}"
 
     @staticmethod
+    def extract_text_with_structure(file_obj: File) -> tuple[str, str]:
+        """
+        提取文本内容和章节结构
+        返回: (文本内容, 章节结构JSON字符串)
+        """
+        try:
+            content, ext = FileOps._get_bytes_stream(file_obj)
+
+            if ext in ['.docx']:
+                return FileOps._parse_docx_with_structure(content)
+            elif ext in ['.pdf']:
+                return FileOps._parse_pdf_with_structure(content)
+            else:
+                # 其他格式返回纯文本，结构为空
+                text = FileOps.extract_text(file_obj)
+                return text, ""
+
+        except Exception as e:
+            return f"[Error] {str(e)}", ""
+
+    @staticmethod
+    def _parse_docx_with_structure(content: bytes) -> tuple[str, str]:
+        """
+        解析Word文档，提取文本和章节结构
+        """
+        from docx import Document
+        import json
+
+        stream = BytesIO(content)
+        doc = Document(stream)
+
+        text_parts = []
+        structure = []
+        current_section = {"level": 0, "title": "文档开始", "content": []}
+
+        for para in doc.paragraphs:
+            text = para.text.strip()
+            if not text:
+                continue
+
+            # 判断是否为标题（通过样式名称）
+            style_name = para.style.name
+            level = 0
+            if "Heading 1" in style_name or "标题 1" in style_name:
+                level = 1
+            elif "Heading 2" in style_name or "标题 2" in style_name:
+                level = 2
+            elif "Heading 3" in style_name or "标题 3" in style_name:
+                level = 3
+            elif "Heading 4" in style_name or "标题 4" in style_name:
+                level = 4
+
+            if level > 0:
+                # 保存当前章节
+                if current_section["content"]:
+                    structure.append({
+                        "level": current_section["level"],
+                        "title": current_section["title"],
+                        "content_count": len(current_section["content"])
+                    })
+
+                # 开始新章节
+                current_section = {"level": level, "title": text, "content": []}
+                text_parts.append(f"\n{'#' * level} {text}\n")
+            else:
+                current_section["content"].append(text)
+                text_parts.append(text)
+
+        # 保存最后一个章节
+        if current_section["content"]:
+            structure.append({
+                "level": current_section["level"],
+                "title": current_section["title"],
+                "content_count": len(current_section["content"])
+            })
+
+        return "\n".join(text_parts), json.dumps(structure, ensure_ascii=False, indent=2)
+
+    @staticmethod
+    def _parse_pdf_with_structure(content: bytes) -> tuple[str, str]:
+        """
+        解析PDF文档，提取文本和简单的结构（页码）
+        """
+        import pypdf
+
+        stream = BytesIO(content)
+        reader = pypdf.PdfReader(stream)
+
+        text_result = ""
+        structure = []
+
+        for page_num, page in enumerate(reader.pages):
+            page_text = page.extract_text()
+            text_result += f"\n=== 第 {page_num + 1} 页 ===\n"
+            text_result += page_text + "\n"
+
+            structure.append({
+                "level": 0,
+                "title": f"第 {page_num + 1} 页",
+                "content_count": len(page_text.split('\n')) if page_text else 0
+            })
+
+        return text_result, json.dumps(structure, ensure_ascii=False, indent=2)
+
+    @staticmethod
     def _parse_document_bytes(file_obj: File, content: bytes, ext:str) -> str:
         stream = BytesIO(content)
         text_result = ""

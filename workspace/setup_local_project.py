@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-招标文件智能分析系统 - 完整项目文件创建工具
+安天投标文件智能分析系统 - 完整项目文件创建工具
 在本地运行此脚本，会自动创建所有项目文件
 """
 
@@ -13,7 +13,7 @@ from pathlib import Path
 PROJECT_FILES = {
     # Web应用
     "app.py": """"""
-招标文件智能分析系统 - Web界面
+安天投标文件智能分析系统 - Web界面
 """
 import os
 import sys
@@ -31,7 +31,7 @@ from pydantic import BaseModel
 
 # 页面配置
 st.set_page_config(
-    page_title="招标文件智能分析系统",
+    page_title="安天投标文件智能分析系统",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -115,7 +115,7 @@ def display_checklist_result(checklist: Dict[str, Any], section_title: str, colo
 
 def main():
     """主函数"""
-    st.markdown("<h1 class=\\"main-title\\">📊 招标文件智能分析系统</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class=\\"main-title\\">📊 安天投标文件智能分析系统</h1>", unsafe_allow_html=True)
 
     with st.sidebar:
         st.markdown("## 📖 使用说明")
@@ -237,7 +237,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>🤖 招标文件智能分析系统 | 基于LangGraph工作流引擎</p>
+        <p>🤖 安天投标文件智能分析系统 | 基于LangGraph工作流引擎</p>
         <p>💡 AI应用创新激励计划参赛作品</p>
     </div>
     """, unsafe_allow_html=True)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     "start.bat": """@echo off
 chcp 65001 >nul
 echo ==========================================
-echo   招标文件智能分析系统 - 快速启动
+echo   安天投标文件智能分析系统 - 快速启动
 echo ==========================================
 echo.
 
@@ -312,7 +312,7 @@ pyyaml==6.0.3
 """,
 
     # README
-    "README.md": """# 招标文件智能分析系统
+    "README.md": """# 安天投标文件智能分析系统
 
 ## 📖 项目简介
 
@@ -464,7 +464,7 @@ def create_file(filepath: str, content: str):
 def main():
     """主函数"""
     print("=" * 70)
-    print("  招标文件智能分析系统 - 项目文件创建工具")
+    print("  安天投标文件智能分析系统 - 项目文件创建工具")
     print("=" * 70)
     print()
     print("正在创建项目文件...")

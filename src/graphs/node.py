@@ -5,6 +5,7 @@ from jinja2 import Template
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
+from coze_coding_utils.runtime_ctx.context import Context
 
 # 使用公开的 LangChain 接口
 from langchain_openai import ChatOpenAI
@@ -13,7 +14,6 @@ from utils.file.file import FileOps
 from graphs.state import (
     TenderDocParseInput, TenderDocParseOutput,
     BidDocParseInput, BidDocParseOutput,
-    GenerateChecklistInput, GenerateChecklistOutput,
     InvalidItemsCheckInput, InvalidItemsCheckOutput,
     CommercialScoreCheckInput, CommercialScoreCheckOutput,
     TechnicalPlanCheckInput, TechnicalPlanCheckOutput,
@@ -77,42 +77,40 @@ def get_config_file_path(config_filename: str) -> str:
 # 文件解析节点
 # ============================================
 
-def tender_doc_parse_node(state: TenderDocParseInput, config: RunnableConfig, runtime: Runtime[Any]) -> TenderDocParseOutput:
+def tender_doc_parse_node(state: TenderDocParseInput, config: RunnableConfig, runtime: Runtime[Context]) -> TenderDocParseOutput:
     """
     title: 招标文件解析
-    desc: 从招标文件中提取文本内容，为后续分析做准备
+    desc: 从招标文件中提取文本内容和章节结构，为后续分析做准备
     integrations:
     """
     try:
-        # 处理输入可能是字典的情况
         tender_file = state.tender_file
         if isinstance(tender_file, dict):
             from utils.file.file import File
             tender_file = File(**tender_file)
-        
-        content = FileOps.extract_text(tender_file)
-        return TenderDocParseOutput(tender_doc_content=content)
+
+        content, structure = FileOps.extract_text_with_structure(tender_file)
+        return TenderDocParseOutput(tender_doc_content=content, tender_doc_structure=structure)
     except Exception as e:
-        return TenderDocParseOutput(tender_doc_content=f"解析失败: {str(e)}")
+        return TenderDocParseOutput(tender_doc_content=f"解析失败: {str(e)}", tender_doc_structure="")
 
 
-def bid_doc_parse_node(state: BidDocParseInput, config: RunnableConfig, runtime: Runtime[Any]) -> BidDocParseOutput:
+def bid_doc_parse_node(state: BidDocParseInput, config: RunnableConfig, runtime: Runtime[Context]) -> BidDocParseOutput:
     """
     title: 投标文件解析
-    desc: 从投标文件中提取文本内容，为后续检查做准备
+    desc: 从投标文件中提取文本内容和章节结构，为后续检查做准备
     integrations:
     """
     try:
-        # 处理输入可能是字典的情况
         bid_file = state.bid_file
         if isinstance(bid_file, dict):
             from utils.file.file import File
             bid_file = File(**bid_file)
-        
-        content = FileOps.extract_text(bid_file)
-        return BidDocParseOutput(bid_doc_content=content)
+
+        content, structure = FileOps.extract_text_with_structure(bid_file)
+        return BidDocParseOutput(bid_doc_content=content, bid_doc_structure=structure)
     except Exception as e:
-        return BidDocParseOutput(bid_doc_content=f"解析失败: {str(e)}")
+        return BidDocParseOutput(bid_doc_content=f"解析失败: {str(e)}", bid_doc_structure="")
 
 
 # ============================================
@@ -179,32 +177,10 @@ def call_llm(sp: str, up: str, llm_config: Dict[str, Any]) -> str:
 # Agent节点函数
 # ============================================
 
-def generate_checklist_node(state: GenerateChecklistInput, config: RunnableConfig, runtime: Runtime[Any]) -> GenerateChecklistOutput:
-    """
-    title: 生成检查清单
-    desc: 根据招标文件内容，提取商务要求、商务评分规则、技术评分细则、废标项等关键信息，生成结构化检查清单
-    integrations: 大语言模型
-    """
-    # 读取配置文件
-    cfg_file = get_config_file_path("generate_checklist_cfg.json")
-    with open(cfg_file, 'r', encoding='utf-8') as fd:
-        _cfg = json.load(fd)
-
-    llm_config = _cfg.get("config", {})
-    sp = _cfg.get("sp", "")
-    up = _cfg.get("up", "")
-
-    up_tpl = Template(up)
-    user_prompt_content = up_tpl.render({"tender_doc_content": state.tender_doc_content})
-
-    result = call_llm(sp, user_prompt_content, llm_config)
-    return GenerateChecklistOutput(checklist=result)
-
-
-def invalid_items_check_node(state: InvalidItemsCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> InvalidItemsCheckOutput:
+def invalid_items_check_node(state: InvalidItemsCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> InvalidItemsCheckOutput:
     """
     title: 废标项检查
-    desc: 检查投标文件是否存在废标风险，对比检查清单中的废标要求，给出具体判断结果
+    desc: 检查投标文件是否存在废标风险，对比招标文件中的废标要求，给出具体判断结果
     integrations: 大语言模型
     """
     cfg_file = get_config_file_path("invalid_items_check_cfg.json")
@@ -217,15 +193,16 @@ def invalid_items_check_node(state: InvalidItemsCheckInput, config: RunnableConf
 
     up_tpl = Template(up)
     user_prompt_content = up_tpl.render({
-        "checklist": state.checklist,
-        "bid_doc_content": state.bid_doc_content
+        "tender_doc_content": state.tender_doc_content,
+        "bid_doc_content": state.bid_doc_content,
+        "bid_doc_structure": state.bid_doc_structure
     })
 
     result = call_llm(sp, user_prompt_content, llm_config)
     return InvalidItemsCheckOutput(invalid_items_check=result)
 
 
-def commercial_score_check_node(state: CommercialScoreCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> CommercialScoreCheckOutput:
+def commercial_score_check_node(state: CommercialScoreCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> CommercialScoreCheckOutput:
     """
     title: 商务得分点检查
     desc: 根据商务评分规则，检查投标文件商务部分的完整性，估算得分，找出失分点和改进机会
@@ -241,15 +218,16 @@ def commercial_score_check_node(state: CommercialScoreCheckInput, config: Runnab
 
     up_tpl = Template(up)
     user_prompt_content = up_tpl.render({
-        "checklist": state.checklist,
-        "bid_doc_content": state.bid_doc_content
+        "tender_doc_content": state.tender_doc_content,
+        "bid_doc_content": state.bid_doc_content,
+        "bid_doc_structure": state.bid_doc_structure
     })
 
     result = call_llm(sp, user_prompt_content, llm_config)
     return CommercialScoreCheckOutput(commercial_score_check=result)
 
 
-def technical_plan_check_node(state: TechnicalPlanCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> TechnicalPlanCheckOutput:
+def technical_plan_check_node(state: TechnicalPlanCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> TechnicalPlanCheckOutput:
     """
     title: 技术方案检查
     desc: 检查技术方案的完整性、创新性、可行性，评估是否符合技术评分细则，给出改进建议
@@ -265,15 +243,16 @@ def technical_plan_check_node(state: TechnicalPlanCheckInput, config: RunnableCo
 
     up_tpl = Template(up)
     user_prompt_content = up_tpl.render({
-        "checklist": state.checklist,
-        "bid_doc_content": state.bid_doc_content
+        "tender_doc_content": state.tender_doc_content,
+        "bid_doc_content": state.bid_doc_content,
+        "bid_doc_structure": state.bid_doc_structure
     })
 
     result = call_llm(sp, user_prompt_content, llm_config)
     return TechnicalPlanCheckOutput(technical_plan_check=result)
 
 
-def indicator_response_check_node(state: IndicatorResponseCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> IndicatorResponseCheckOutput:
+def indicator_response_check_node(state: IndicatorResponseCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> IndicatorResponseCheckOutput:
     """
     title: 指标与应答检查
     desc: 检查投标文件是否逐条响应了招标文件的技术指标要求，找出遗漏或应答不充分的地方
@@ -289,15 +268,16 @@ def indicator_response_check_node(state: IndicatorResponseCheckInput, config: Ru
 
     up_tpl = Template(up)
     user_prompt_content = up_tpl.render({
-        "checklist": state.checklist,
-        "bid_doc_content": state.bid_doc_content
+        "tender_doc_content": state.tender_doc_content,
+        "bid_doc_content": state.bid_doc_content,
+        "bid_doc_structure": state.bid_doc_structure
     })
 
     result = call_llm(sp, user_prompt_content, llm_config)
     return IndicatorResponseCheckOutput(indicator_response_check=result)
 
 
-def technical_score_check_node(state: TechnicalScoreCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> TechnicalScoreCheckOutput:
+def technical_score_check_node(state: TechnicalScoreCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> TechnicalScoreCheckOutput:
     """
     title: 技术得分点检测
     desc: 根据技术指标与应答情况，结合招标文件中的技术要求，进行技术得分点检测，检查是否覆盖全部技术应答内容，是否有遗漏缺项，是否有应答不充分或者应答错误等影响技术评分的情况
@@ -313,8 +293,9 @@ def technical_score_check_node(state: TechnicalScoreCheckInput, config: Runnable
 
     up_tpl = Template(up)
     user_prompt_content = up_tpl.render({
-        "checklist": state.checklist,
+        "tender_doc_content": state.tender_doc_content,
         "bid_doc_content": state.bid_doc_content,
+        "bid_doc_structure": state.bid_doc_structure,
         "indicator_response_check": state.indicator_response_check
     })
 
@@ -322,7 +303,7 @@ def technical_score_check_node(state: TechnicalScoreCheckInput, config: Runnable
     return TechnicalScoreCheckOutput(technical_score_check=result)
 
 
-def bid_structure_check_node(state: BidStructureCheckInput, config: RunnableConfig, runtime: Runtime[Any]) -> BidStructureCheckOutput:
+def bid_structure_check_node(state: BidStructureCheckInput, config: RunnableConfig, runtime: Runtime[Context]) -> BidStructureCheckOutput:
     """
     title: 投标文件结构检查
     desc: 根据投标文件中对于商务部分与技术部分的模板要求，对投标文件整体目录结构进行检查，是否有缺失项，是否存在目录与内容排布不合理等影响专家阅读标书快速对应得分点等问题
@@ -340,14 +321,14 @@ def bid_structure_check_node(state: BidStructureCheckInput, config: RunnableConf
     user_prompt_content = up_tpl.render({
         "tender_doc_content": state.tender_doc_content,
         "bid_doc_content": state.bid_doc_content,
-        "checklist": state.checklist
+        "bid_doc_structure": state.bid_doc_structure
     })
 
     result = call_llm(sp, user_prompt_content, llm_config)
     return BidStructureCheckOutput(bid_structure_check=result)
 
 
-def modification_summary_node(state: ModificationSummaryInput, config: RunnableConfig, runtime: Runtime[Any]) -> ModificationSummaryOutput:
+def modification_summary_node(state: ModificationSummaryInput, config: RunnableConfig, runtime: Runtime[Context]) -> ModificationSummaryOutput:
     """
     title: 修改建议汇总
     desc: 汇总所有检查结果，按优先级排序，生成完整的修改清单和详细修改意见

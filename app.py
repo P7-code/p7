@@ -1,11 +1,12 @@
 """
-招标文件智能分析系统 - Web界面
+安天投标文件智能分析系统 - Web界面
 """
 import os
 import sys
 import json
 import tempfile
 from typing import Dict, Any
+from datetime import datetime
 import streamlit as st
 
 # 添加src到Python路径
@@ -14,11 +15,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from graphs.graph import main_graph
 from utils.file.file import File
 from pydantic import BaseModel
+from docx import Document
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 
 # 页面配置
 st.set_page_config(
-    page_title="招标文件智能分析系统",
+    page_title="安天投标文件智能分析系统",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -103,10 +107,117 @@ def display_checklist_result(checklist: Dict[str, Any], section_title: str, colo
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+def generate_docx_report(result: Dict[str, Any]) -> bytes:
+    """
+    生成docx格式的分析报告
+
+    Args:
+        result: 分析结果字典
+
+    Returns:
+        docx文件的字节数据
+    """
+    doc = Document()
+
+    # 设置文档样式
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = '宋体'
+    font.size = Pt(12)
+
+    # 标题
+    title = doc.add_heading('投标文件智能分析报告', 0)
+    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    # 生成时间
+    doc.add_paragraph(f'生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+    doc.add_paragraph()
+
+    # 废标项检查
+    doc.add_heading('一、废标项检查', level=1)
+    invalid_items = result.get("invalid_items_check", "")
+    if invalid_items:
+        add_content_to_docx(doc, invalid_items)
+
+    # 商务得分检查
+    doc.add_heading('二、商务得分检查', level=1)
+    commercial_score = result.get("commercial_score_check", "")
+    if commercial_score:
+        add_content_to_docx(doc, commercial_score)
+
+    # 技术方案检查
+    doc.add_heading('三、技术方案检查', level=1)
+    technical_plan = result.get("technical_plan_check", "")
+    if technical_plan:
+        add_content_to_docx(doc, technical_plan)
+
+    # 指标应答检查
+    doc.add_heading('四、指标应答检查', level=1)
+    indicator_response = result.get("indicator_response_check", "")
+    if indicator_response:
+        add_content_to_docx(doc, indicator_response)
+
+    # 技术得分检查
+    doc.add_heading('五、技术得分检查', level=1)
+    technical_score = result.get("technical_score_check", "")
+    if technical_score:
+        add_content_to_docx(doc, technical_score)
+
+    # 文件结构检查
+    doc.add_heading('六、文件结构检查', level=1)
+    bid_structure = result.get("bid_structure_check", "")
+    if bid_structure:
+        add_content_to_docx(doc, bid_structure)
+
+    # 修改建议汇总
+    doc.add_heading('七、修改建议汇总', level=1)
+    summary = result.get("final_modification_suggestions", "")
+    if summary:
+        add_content_to_docx(doc, summary)
+
+    # 保存到字节流
+    from io import BytesIO
+    doc_stream = BytesIO()
+    doc.save(doc_stream)
+    doc_stream.seek(0)
+
+    return doc_stream.getvalue()
+
+
+def add_content_to_docx(doc: Document, content: str):
+    """
+    将内容添加到docx文档中
+
+    Args:
+        doc: docx文档对象
+        content: 要添加的内容
+    """
+    lines = content.split('\n')
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # 判断是否为标题（以===或##开头）
+        if line.startswith('===') or line.startswith('#'):
+            level = 2
+            if line.startswith('===') and line.count('=') > 5:
+                level = 1
+            elif line.startswith('###'):
+                level = 3
+            doc.add_heading(line.lstrip('= #'), level=level)
+        # 判断是否为列表项（以数字或-开头）
+        elif line[0].isdigit() or (line[0] == '-' and len(line) > 1 and line[1].isspace()):
+            doc.add_paragraph(line)
+        else:
+            doc.add_paragraph(line)
+
+
 def main():
     """主函数"""
     # 标题
-    st.markdown('<h1 class="main-title">📊 招标文件智能分析系统</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">📊 安天投标文件智能分析系统</h1>', unsafe_allow_html=True)
     
     # 侧边栏说明
     with st.sidebar:
@@ -238,14 +349,29 @@ def main():
             
             # 下载结果按钮
             st.markdown("---")
-            if st.button("📥 下载完整分析报告"):
-                report_data = json.dumps(result, ensure_ascii=False, indent=2)
-                st.download_button(
-                    label="下载JSON报告",
-                    data=report_data,
-                    file_name="招标文件分析报告.json",
-                    mime="application/json"
-                )
+
+            # 下载选项
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("📄 下载Word报告"):
+                    docx_data = generate_docx_report(result)
+                    st.download_button(
+                        label="下载DOCX报告",
+                        data=docx_data,
+                        file_name=f"投标文件分析报告_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
+
+            with col2:
+                if st.button("📥 下载JSON报告"):
+                    report_data = json.dumps(result, ensure_ascii=False, indent=2)
+                    st.download_button(
+                        label="下载JSON报告",
+                        data=report_data,
+                        file_name="招标文件分析报告.json",
+                        mime="application/json"
+                    )
             
         except Exception as e:
             st.error(f"分析过程出错: {str(e)}")
@@ -257,7 +383,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 1rem;">
-        <p>🤖 招标文件智能分析系统 | 基于LangGraph工作流引擎</p>
+        <p>🤖 安天投标文件智能分析系统 | 基于LangGraph工作流引擎</p>
         <p>💡 AI应用创新激励计划参赛作品</p>
     </div>
     """, unsafe_allow_html=True)

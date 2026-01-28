@@ -10,8 +10,9 @@ class GlobalState(BaseModel):
     tender_file: File = Field(..., description="招标文件")
     bid_file: File = Field(..., description="投标文件")
     tender_doc_content: str = Field(default="", description="招标文件文本内容")
+    tender_doc_structure: str = Field(default="", description="招标文件章节结构（JSON格式）")
     bid_doc_content: str = Field(default="", description="投标文件文本内容")
-    checklist: str = Field(default="", description="生成的检查清单，包含商务要求、商务评分规则、技术评分细则、废标项等")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
     invalid_items_check: str = Field(default="", description="废标项检查结果")
     commercial_score_check: str = Field(default="", description="商务得分点检查结果")
     technical_plan_check: str = Field(default="", description="技术方案检查结果")
@@ -50,6 +51,7 @@ class TenderDocParseInput(BaseModel):
 class TenderDocParseOutput(BaseModel):
     """招标文件解析节点输出"""
     tender_doc_content: str = Field(..., description="招标文件提取的文本内容")
+    tender_doc_structure: str = Field(default="", description="招标文件章节结构（JSON格式）")
 
 # 投标文件解析节点
 class BidDocParseInput(BaseModel):
@@ -59,21 +61,14 @@ class BidDocParseInput(BaseModel):
 class BidDocParseOutput(BaseModel):
     """投标文件解析节点输出"""
     bid_doc_content: str = Field(..., description="投标文件提取的文本内容")
-
-# 生成检查清单节点 (Agent)
-class GenerateChecklistInput(BaseModel):
-    """生成检查清单节点输入"""
-    tender_doc_content: str = Field(..., description="招标文件文本内容")
-
-class GenerateChecklistOutput(BaseModel):
-    """生成检查清单节点输出"""
-    checklist: str = Field(..., description="检查清单，包含：1.废标项 2.商务要求 3.商务评分规则 4.技术评分细则 5.其他关键要求")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 # 废标项检查节点 (Agent)
 class InvalidItemsCheckInput(BaseModel):
     """废标项检查节点输入"""
-    checklist: str = Field(..., description="检查清单")
+    tender_doc_content: str = Field(..., description="招标文件文本内容")
     bid_doc_content: str = Field(..., description="投标文件内容")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 class InvalidItemsCheckOutput(BaseModel):
     """废标项检查节点输出"""
@@ -82,8 +77,9 @@ class InvalidItemsCheckOutput(BaseModel):
 # 商务得分点检查节点 (Agent)
 class CommercialScoreCheckInput(BaseModel):
     """商务得分点检查节点输入"""
-    checklist: str = Field(..., description="检查清单")
+    tender_doc_content: str = Field(..., description="招标文件文本内容")
     bid_doc_content: str = Field(..., description="投标文件内容")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 class CommercialScoreCheckOutput(BaseModel):
     """商务得分点检查节点输出"""
@@ -92,8 +88,9 @@ class CommercialScoreCheckOutput(BaseModel):
 # 技术方案检查节点 (Agent)
 class TechnicalPlanCheckInput(BaseModel):
     """技术方案检查节点输入"""
-    checklist: str = Field(..., description="检查清单")
+    tender_doc_content: str = Field(..., description="招标文件文本内容")
     bid_doc_content: str = Field(..., description="投标文件内容")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 class TechnicalPlanCheckOutput(BaseModel):
     """技术方案检查节点输出"""
@@ -102,8 +99,9 @@ class TechnicalPlanCheckOutput(BaseModel):
 # 指标与应答检查节点 (Agent)
 class IndicatorResponseCheckInput(BaseModel):
     """指标与应答检查节点输入"""
-    checklist: str = Field(..., description="检查清单")
+    tender_doc_content: str = Field(..., description="招标文件文本内容")
     bid_doc_content: str = Field(..., description="投标文件内容")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 class IndicatorResponseCheckOutput(BaseModel):
     """指标与应答检查节点输出"""
@@ -126,8 +124,9 @@ class ModificationSummaryOutput(BaseModel):
 # 技术得分点检测节点 (Agent)
 class TechnicalScoreCheckInput(BaseModel):
     """技术得分点检测节点输入"""
-    checklist: str = Field(..., description="检查清单，包含技术评分细则")
+    tender_doc_content: str = Field(..., description="招标文件文本内容")
     bid_doc_content: str = Field(..., description="投标文件内容")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
     indicator_response_check: str = Field(default="", description="指标与应答检查结果，作为参考")
 
 class TechnicalScoreCheckOutput(BaseModel):
@@ -139,7 +138,7 @@ class BidStructureCheckInput(BaseModel):
     """投标文件结构检查节点输入"""
     tender_doc_content: str = Field(..., description="招标文件内容，提取投标文件模板要求")
     bid_doc_content: str = Field(..., description="投标文件内容")
-    checklist: str = Field(..., description="检查清单，包含商务和技术部分的模板要求")
+    bid_doc_structure: str = Field(default="", description="投标文件章节结构（JSON格式）")
 
 class BidStructureCheckOutput(BaseModel):
     """投标文件结构检查节点输出"""

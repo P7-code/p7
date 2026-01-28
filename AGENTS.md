@@ -1,5 +1,5 @@
 ## 项目概述
-- **名称**: 招标文件智能分析系统
+- **名称**: 安天投标文件智能分析系统
 - **功能**: 基于LangGraph工作流的智能招标文件分析工具，自动检测废标项、商务得分、技术方案等六个维度，生成详细的修改建议。
 
 ### 节点清单
@@ -7,7 +7,6 @@
 |-------|---------|------|---------|---------|---------|
 | tender_doc_parse | `src/graphs/node.py` | task | 解析招标文件内容 | - | - |
 | bid_doc_parse | `src/graphs/node.py` | task | 解析投标文件内容 | - | - |
-| generate_checklist | `src/graphs/node.py` | agent | 生成检查清单（商务要求、评分规则、废标项等） | - | `config/generate_checklist_cfg.json` |
 | invalid_items_check | `src/graphs/node.py` | agent | 废标项检查 | - | `config/invalid_items_check_cfg.json` |
 | commercial_score_check | `src/graphs/node.py` | agent | 商务得分点检查 | - | `config/commercial_score_check_cfg.json` |
 | technical_plan_check | `src/graphs/node.py` | agent | 技术方案检查 | - | `config/technical_plan_check_cfg.json` |
@@ -41,11 +40,6 @@
 │  parse      │ 串行
 └──────┬──────┘
        │
-┌──────▼──────┐
-│generate_    │
-│ checklist   │ 串行
-└──────┬──────┘
-       │
   ┌────┴──────────────────────────────────────────┐
   │                六维并行检测                     │
   ├──────────┬──────────┬──────────┬──────────────┤
@@ -77,15 +71,14 @@
 ### 串行阶段
 1. **tender_doc_parse**: 解析招标文件 → 提取文本内容
 2. **bid_doc_parse**: 解析投标文件 → 提取文本内容
-3. **generate_checklist**: 基于招标文件内容 → 生成检查清单
 
 ### 并行阶段
-1. **invalid_items_check**: 检查清单 + 投标内容 → 废标项检测结果
-2. **commercial_score_check**: 检查清单 + 投标内容 → 商务得分结果
-3. **technical_plan_check**: 检查清单 + 投标内容 → 技术方案评估
-4. **indicator_response_check**: 检查清单 + 投标内容 → 指标应答验证
-5. **technical_score_check**: 检查清单 + 投标内容 → 技术得分分析
-6. **bid_structure_check**: 检查清单 + 投标内容 → 文件结构检查
+1. **invalid_items_check**: 招标文件内容 + 投标内容 → 废标项检测结果
+2. **commercial_score_check**: 招标文件内容 + 投标内容 → 商务得分结果
+3. **technical_plan_check**: 招标文件内容 + 投标内容 → 技术方案评估
+4. **indicator_response_check**: 招标文件内容 + 投标内容 → 指标应答验证
+5. **technical_score_check**: 招标文件内容 + 投标内容 + indicator_response_check → 技术得分分析
+6. **bid_structure_check**: 招标文件内容 + 投标内容 → 文件结构检查
 
 ### 输出阶段
 1. **modification_summary**: 汇总所有检查结果 → 生成修改建议
@@ -94,7 +87,6 @@
 
 | 配置文件 | 用途 |
 |---------|------|
-| `config/generate_checklist_cfg.json` | 生成检查清单的 LLM 配置 |
 | `config/invalid_items_check_cfg.json` | 废标项检查的 LLM 配置 |
 | `config/commercial_score_check_cfg.json` | 商务得分检查的 LLM 配置 |
 | `config/technical_plan_check_cfg.json` | 技术方案检查的 LLM 配置 |
