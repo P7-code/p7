@@ -1,14 +1,21 @@
 import json
 import os
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 from jinja2 import Template
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
 
 # 使用公开的 LangChain 接口
 from langchain_openai import ChatOpenAI
+
+# 条件导入Context，避免在Streamlit Cloud上因私有包缺失而报错
+try:
+    from coze_coding_utils.runtime_ctx.context import Context
+except ImportError:
+    # 如果导入失败，创建一个假的Context类用于类型注解
+    class Context:
+        pass
 
 from utils.file.file import FileOps
 from graphs.state import (
