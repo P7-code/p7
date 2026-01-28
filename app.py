@@ -178,18 +178,16 @@ def main():
         
         # 准备输入
         try:
-          
             input_data = {
-    "tender_file": {
-        "url": f"file://{tender_path}",
-        "file_type": "document"
-    },
-    "bid_file": {
-        "url": f"file://{bid_path}",
-        "file_type": "document"
-    }
-}
-            
+                "tender_file": {
+                    "url": f"file://{tender_path}",
+                    "file_type": "document"
+                },
+                "bid_file": {
+                    "url": f"file://{bid_path}",
+                    "file_type": "document"
+                }
+            }
             
             st.success("文件准备就绪，开始分析...")
             

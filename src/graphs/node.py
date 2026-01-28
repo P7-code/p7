@@ -25,6 +25,24 @@ from graphs.state import (
 
 
 # ============================================
+# 配置文件路径辅助函数
+# ============================================
+
+def get_config_file_path(config_filename: str) -> str:
+    """
+    获取配置文件的绝对路径
+    """
+    # 获取 src/graphs 目录的绝对路径
+    graphs_dir = os.path.dirname(os.path.abspath(__file__))
+    # 项目根目录是 src/graphs 的上一级的上一级
+    project_root = os.path.dirname(os.path.dirname(graphs_dir))
+    # 拼接配置文件路径
+    config_path = os.path.join(project_root, "config", config_filename)
+    # 规范化为绝对路径
+    return os.path.abspath(config_path)
+
+
+# ============================================
 # 文件解析节点
 # ============================================
 
@@ -137,7 +155,7 @@ def generate_checklist_node(state: GenerateChecklistInput, config: RunnableConfi
     integrations: 大语言模型
     """
     # 读取配置文件
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/generate_checklist_cfg.json")
+    cfg_file = get_config_file_path("generate_checklist_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -158,7 +176,7 @@ def invalid_items_check_node(state: InvalidItemsCheckInput, config: RunnableConf
     desc: 检查投标文件是否存在废标风险，对比检查清单中的废标要求，给出具体判断结果
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/invalid_items_check_cfg.json")
+    cfg_file = get_config_file_path("invalid_items_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -182,7 +200,7 @@ def commercial_score_check_node(state: CommercialScoreCheckInput, config: Runnab
     desc: 根据商务评分规则，检查投标文件商务部分的完整性，估算得分，找出失分点和改进机会
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/commercial_score_check_cfg.json")
+    cfg_file = get_config_file_path("commercial_score_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -206,7 +224,7 @@ def technical_plan_check_node(state: TechnicalPlanCheckInput, config: RunnableCo
     desc: 检查技术方案的完整性、创新性、可行性，评估是否符合技术评分细则，给出改进建议
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/technical_plan_check_cfg.json")
+    cfg_file = get_config_file_path("technical_plan_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -230,7 +248,7 @@ def indicator_response_check_node(state: IndicatorResponseCheckInput, config: Ru
     desc: 检查投标文件是否逐条响应了招标文件的技术指标要求，找出遗漏或应答不充分的地方
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/indicator_response_check_cfg.json")
+    cfg_file = get_config_file_path("indicator_response_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -254,7 +272,7 @@ def technical_score_check_node(state: TechnicalScoreCheckInput, config: Runnable
     desc: 根据技术指标与应答情况，结合招标文件中的技术要求，进行技术得分点检测，检查是否覆盖全部技术应答内容，是否有遗漏缺项，是否有应答不充分或者应答错误等影响技术评分的情况
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/technical_score_check_cfg.json")
+    cfg_file = get_config_file_path("technical_score_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -279,7 +297,7 @@ def bid_structure_check_node(state: BidStructureCheckInput, config: RunnableConf
     desc: 根据投标文件中对于商务部分与技术部分的模板要求，对投标文件整体目录结构进行检查，是否有缺失项，是否存在目录与内容排布不合理等影响专家阅读标书快速对应得分点等问题
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/bid_structure_check_cfg.json")
+    cfg_file = get_config_file_path("bid_structure_check_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 
@@ -304,7 +322,7 @@ def modification_summary_node(state: ModificationSummaryInput, config: RunnableC
     desc: 汇总所有检查结果，按优先级排序，生成完整的修改清单和详细修改意见
     integrations: 大语言模型
     """
-    cfg_file = os.path.join(os.path.dirname(__file__), "../config/modification_summary_cfg.json")
+    cfg_file = get_config_file_path("modification_summary_cfg.json")
     with open(cfg_file, 'r', encoding='utf-8') as fd:
         _cfg = json.load(fd)
 

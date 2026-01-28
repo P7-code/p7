@@ -33,18 +33,42 @@ cd p7
 pip install -r requirements.txt
 ```
 
-#### 3. 配置环境变量（可选）
+#### 3. 配置 API Key（推荐）
 
-如果要使用完整功能，需要配置 LLM API：
+**方式 A: 使用 secrets.toml 文件（推荐）**
+
+复制示例文件并填写你的配置：
+
+```bash
+# 复制示例文件
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+
+# 编辑文件，填写你的 API Key
+# 选择以下任一服务进行配置
+
+# DeepSeek
+# OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxx"
+# OPENAI_API_BASE = "https://api.deepseek.com"
+
+# Kimi
+# OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxx"
+# OPENAI_API_BASE = "https://api.moonshot.cn/v1"
+
+# OpenAI
+# OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxx"
+# OPENAI_API_BASE = "https://api.openai.com/v1"
+```
+
+**方式 B: 使用环境变量**
 
 ```bash
 # Linux/Mac
 export OPENAI_API_KEY="your-api-key"
-export OPENAI_API_BASE="https://api.openai.com/v1"  # 可选
+export OPENAI_API_BASE="https://api.deepseek.com"
 
 # Windows
 set OPENAI_API_KEY=your-api-key
-set OPENAI_API_BASE=https://api.openai.com/v1
+set OPENAI_API_BASE=https://api.deepseek.com
 ```
 
 #### 4. 运行应用
@@ -55,17 +79,23 @@ streamlit run app.py
 
 浏览器会自动打开 http://localhost:8501
 
-## 📦 部署到 Streamlit Cloud
+> **提示**: 如果未配置 API Key，系统将运行在演示模式，返回模拟结果。
 
-### 1. 推送代码到 GitHub
+## 📦 部署指南
+
+详细的部署指南请查看 [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### 快速部署到 Streamlit Cloud
+
+#### 1. 推送代码到 GitHub
 
 ```bash
 git add .
-git commit -m "your commit message"
+git commit -m "chore: 准备部署"
 git push origin main
 ```
 
-### 2. 连接 Streamlit Cloud
+#### 2. 连接 Streamlit Cloud
 
 1. 访问 https://share.streamlit.io
 2. 点击 "New app"
@@ -76,22 +106,59 @@ git push origin main
    - Main file path: `app.py`
 5. 点击 "Deploy"
 
-### 3. 配置环境变量（推荐）
+#### 3. 配置 Secrets（关键步骤）
 
-在 Streamlit Cloud 中添加环境变量：
+**方式 A: 在 Streamlit Cloud 界面配置**
 
-1. 进入应用设置：Settings → Environment Variables
-2. 添加以下变量：
-   - `OPENAI_API_KEY`: 你的 API 密钥
-   - `OPENAI_API_BASE`: API 基础URL（可选）
+1. 部署完成后，进入应用主页
+2. 点击右上角 **"···"** → **"Manage app"**
+3. 左侧菜单选择 **"Settings"** → **"Secrets"**
+4. 点击 **"+ New secret"**
+5. 添加以下环境变量：
+
+   ```
+   Name: OPENAI_API_KEY
+   Value: sk-xxxxxxxxxxxxxxxx
+   ```
+
+   ```
+   Name: OPENAI_API_BASE
+   Value: https://api.deepseek.com
+   ```
+
+6. 点击 **"Save"**
+7. 返回应用主页，点击 **"Re-deploy"**
+
+**方式 B: 提交 secrets.toml 文件（不推荐，仅用于测试）**
+
+```bash
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# 编辑文件填写你的 API Key
+git add .streamlit/secrets.toml
+git commit -m "add: 添加secrets配置"
+git push origin main
+```
+
+> **注意**: `.streamlit/secrets.toml` 已在 `.gitignore` 中，不会提交到 Git。仅用于测试环境。
 
 ### 支持的 LLM 服务
 
 本系统使用 OpenAI 兼容接口，支持以下服务：
 
-- **OpenAI** - https://api.openai.com/v1
-- **Azure OpenAI** - 你的 Azure endpoint
-- **其他兼容服务** - 如 DeepSeek、Kimi 等
+| 服务 | API Base | 价格 | 特点 |
+|-----|---------|------|------|
+| **DeepSeek** | https://api.deepseek.com | ¥1/百万 tokens | 高性价比、中文优化 |
+| **Kimi** | https://api.moonshot.cn/v1 | ¥12/百万 tokens | 长上下文、中文优化 |
+| **OpenAI** | https://api.openai.com/v1 | $2.5/百万 tokens | 最强大的通用模型 |
+| **智谱 AI** | https://open.bigmodel.cn/api/paas/v4 | ¥5/百万 tokens | 中文优化、API 稳定 |
+
+### 其他部署方式
+
+- **Hugging Face Spaces**: 免费部署，支持 GPU
+- **Docker**: 适合生产环境
+- **本地运行**: 适合开发测试
+
+详见 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 📁 项目结构
 
