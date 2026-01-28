@@ -294,11 +294,11 @@ def main():
         try:
             input_data = {
                 "tender_file": {
-                    "url": f"file://{tender_path}",
+                    "url": tender_path,
                     "file_type": "document"
                 },
                 "bid_file": {
-                    "url": f"file://{bid_path}",
+                    "url": bid_path,
                     "file_type": "document"
                 }
             }
