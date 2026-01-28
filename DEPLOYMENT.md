@@ -289,6 +289,20 @@ streamlit run app.py
 
 ## 📊 支持的 LLM 服务
 
+### 火山引擎方舟（当前使用）
+
+```toml
+OPENAI_API_KEY = "9cebea4f-aa41-47ea-942e-4bf1324d1162"
+OPENAI_API_BASE = "https://ark.cn-beijing.volces.com/api/v3"
+```
+
+- 官网：https://console.volcengine.com/ark
+- 价格：按官方定价
+- 特点：支持多模型、国内访问稳定、API 响应快速
+- 当前模型：`deepseek-v3-2-251201`
+
+详细配置请参考：[VOLCENGINE_ARK_GUIDE.md](./VOLCENGINE_ARK_GUIDE.md)
+
 ### DeepSeek
 
 ```toml

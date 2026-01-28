@@ -46,6 +46,10 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 # 编辑文件，填写你的 API Key
 # 选择以下任一服务进行配置
 
+# 火山引擎方舟（推荐）
+# OPENAI_API_KEY = "9cebea4f-aa41-47ea-942e-4bf1324d1162"
+# OPENAI_API_BASE = "https://ark.cn-beijing.volces.com/api/v3"
+
 # DeepSeek
 # OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxx"
 # OPENAI_API_BASE = "https://api.deepseek.com"
@@ -62,13 +66,13 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 **方式 B: 使用环境变量**
 
 ```bash
-# Linux/Mac
-export OPENAI_API_KEY="your-api-key"
-export OPENAI_API_BASE="https://api.deepseek.com"
+# Linux/Mac - 火山引擎方舟
+export OPENAI_API_KEY="9cebea4f-aa41-47ea-942e-4bf1324d1162"
+export OPENAI_API_BASE="https://ark.cn-beijing.volces.com/api/v3"
 
-# Windows
-set OPENAI_API_KEY=your-api-key
-set OPENAI_API_BASE=https://api.deepseek.com
+# Windows - 火山引擎方舟
+set OPENAI_API_KEY=9cebea4f-aa41-47ea-942e-4bf1324d1162
+set OPENAI_API_BASE=https://ark.cn-beijing.volces.com/api/v3
 ```
 
 #### 4. 运行应用
@@ -145,12 +149,15 @@ git push origin main
 
 本系统使用 OpenAI 兼容接口，支持以下服务：
 
-| 服务 | API Base | 价格 | 特点 |
-|-----|---------|------|------|
-| **DeepSeek** | https://api.deepseek.com | ¥1/百万 tokens | 高性价比、中文优化 |
-| **Kimi** | https://api.moonshot.cn/v1 | ¥12/百万 tokens | 长上下文、中文优化 |
-| **OpenAI** | https://api.openai.com/v1 | $2.5/百万 tokens | 最强大的通用模型 |
-| **智谱 AI** | https://open.bigmodel.cn/api/paas/v4 | ¥5/百万 tokens | 中文优化、API 稳定 |
+| 服务 | API Base | 价格 | 特点 | 推荐度 |
+|-----|---------|------|------|--------|
+| **火山引擎方舟** | https://ark.cn-beijing.volces.com/api/v3 | 按官方定价 | 支持多模型、国内访问稳定 | ⭐⭐⭐⭐⭐ |
+| **DeepSeek** | https://api.deepseek.com | ¥1/百万 tokens | 高性价比、中文优化 | ⭐⭐⭐⭐ |
+| **Kimi** | https://api.moonshot.cn/v1 | ¥12/百万 tokens | 长上下文、中文优化 | ⭐⭐⭐⭐ |
+| **OpenAI** | https://api.openai.com/v1 | $2.5/百万 tokens | 最强大的通用模型 | ⭐⭐⭐⭐ |
+| **智谱 AI** | https://open.bigmodel.cn/api/paas/v4 | ¥5/百万 tokens | 中文优化、API 稳定 | ⭐⭐⭐⭐ |
+
+**当前配置使用的模型**：`deepseek-v3-2-251201`（火山引擎方舟）
 
 ### 其他部署方式
 
