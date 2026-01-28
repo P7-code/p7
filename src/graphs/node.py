@@ -25,6 +25,37 @@ from graphs.state import (
 
 
 # ============================================
+# Coze 环境变量加载
+# ============================================
+
+def load_coze_env():
+    """
+    从 .coze.env 文件加载环境变量（Coze 平台备用配置方式）
+    """
+    try:
+        workspace_path = os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects")
+        env_file = os.path.join(workspace_path, ".coze.env")
+
+        if os.path.exists(env_file):
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        os.environ[key.strip()] = value.strip()
+            return True
+    except Exception as e:
+        print(f"[警告] 加载 .coze.env 文件失败: {e}")
+    return False
+
+
+# 加载 Coze 环境变量（在模块导入时执行）
+load_coze_env()
+
+
+# ============================================
 # 配置文件路径辅助函数
 # ============================================
 

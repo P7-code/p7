@@ -36,6 +36,9 @@ ENV/
 # Streamlit
 .streamlit/secrets.toml
 
+# Coze 环境配置
+.coze.env
+
 # Environment variables
 .env
 .env.local

@@ -77,7 +77,10 @@ def display_checklist_result(checklist: Dict[str, Any], section_title: str, colo
     st.markdown(f"### {section_title}")
     st.markdown(f'<div class="{color_class}">', unsafe_allow_html=True)
     
-    if isinstance(checklist, dict):
+    # 如果是字符串，直接显示
+    if isinstance(checklist, str):
+        st.markdown(checklist)
+    elif isinstance(checklist, dict):
         for key, value in checklist.items():
             if isinstance(value, list):
                 st.markdown(f"**{key}:**")
@@ -197,14 +200,15 @@ def main():
             
             # 显示结果
             st.markdown('<h2 class="section-header">📋 分析结果</h2>', unsafe_allow_html=True)
-            
+
             # 废标项检测结果
             if result.get("invalid_items_check"):
                 invalid_items = result["invalid_items_check"]
-                if invalid_items.get("invalid_items"):
-                    display_checklist_result(invalid_items, "❌ 废标项检测结果", "warning-box")
-                else:
+                # 检查是否包含废标风险关键词
+                if "未发现废标项" in invalid_items or "无废标风险" in invalid_items or "恭喜" in invalid_items:
                     st.markdown('<div class="success-box">✅ 未发现废标项，恭喜！</div>', unsafe_allow_html=True)
+                else:
+                    display_checklist_result(invalid_items, "❌ 废标项检测结果", "warning-box")
             
             # 商务得分检查结果
             if result.get("commercial_score_check"):
@@ -230,15 +234,7 @@ def main():
             st.markdown('<h2 class="section-header">💡 修改建议汇总</h2>', unsafe_allow_html=True)
             if result.get("modification_summary"):
                 summary = result["modification_summary"]
-                st.markdown('<div class="info-box">', unsafe_allow_html=True)
-                st.markdown(f"**总修改建议数：** {summary.get('total_modifications', 0)}")
-                st.markdown(f"**优先级建议：** {summary.get('priority_modifications', 0)}")
-                st.markdown(f"**详细建议：**")
-                
-                if isinstance(summary.get('modifications'), list):
-                    for i, mod in enumerate(summary['modifications'], 1):
-                        st.markdown(f"{i}. {mod}")
-                st.markdown("</div>", unsafe_allow_html=True)
+                display_checklist_result(summary, "💡 修改建议汇总", "info-box")
             
             # 下载结果按钮
             st.markdown("---")
